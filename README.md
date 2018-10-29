@@ -1,2 +1,2 @@
-# mothur_ITS.sh
+# mothur_ITS
 Mothur procedure for ITS analysis
