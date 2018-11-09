@@ -34,10 +34,11 @@ summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fast
 classify.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, reference=UNITEv6_sh_dynamic_s.fasta, taxonomy=UNITEv6_sh_dynamic.tax, cutoff=60, processors=44)
 
 #Remove unwanted lineages (Bacteria-unkknown-Protista)
-remove.lineage(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, taxonomy=stability.trim.contigs.good.unique.precluster.abund.pick.UNITEv6_sh_dynamic_s.wang.taxonomy, taxon=Bacteria-unknown-Protista)
+remove.lineage(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, taxonomy=stability.trim.contigs.good.unique.precluster.abund.pick.UNITEv6_sh_dynamic_s.wang.taxonomy, taxon=Bacteria-Animalia-Plantae-unclassified-Plantae_unclassified-unknown-Protista)
 summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table)
 
 #cluster using vsearch, default level is cutoff=0.03, since these are ITS we'll use 5% instead
+# We cannot calculate the distance like with bacteria because the length is not the same
 cluster(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table, method=agc, cutoff=0.05)
 
 #make OTU matrix 
@@ -46,13 +47,13 @@ make.shared(list=stability.trim.contigs.good.unique.precluster.abund.pick.pick.a
 #classify each OTU, used the RDP classification 100% means all seqs in that OTU match at that classification level
 classify.otu(list=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.list, count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table, taxonomy=stability.trim.contigs.good.unique.precluster.abund.pick.UNITEv6_sh_dynamic_s.wang.pick.taxonomy)
 
-get.oturep(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.list, list=current, method=abundance)
+get.oturep(count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table, list=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.list, method=abundance)
 
 #check number of sequences in each sample
 count.groups(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.shared)
 
 #alpha diversity
-summary.single(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.share, calc=nseqs-sobs-coverage-shannon-shannoneven-invsimpson, subsample=10000)
+summary.single(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.shared, calc=nseqs-sobs-coverage-shannon-shannoneven-invsimpson, subsample=10000)
 
 #beta diversity
 dist.shared(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.shared, calc=braycurtis-jest-thetayc, subsample=10000)
