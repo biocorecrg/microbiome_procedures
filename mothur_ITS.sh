@@ -63,4 +63,12 @@ sub.sample(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.
  
 summary.tax(taxonomy=current, count=current)
 
+# Making a tree. you need rename_oturep.py
+python rename_oturep.py   stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.0.05.rep.fast
+
+pairwise.seqs(fasta=clean_repFasta.fasta, cutoff=0.05, output=lt)
+#build a tree for rep sequences
+clearcut(phylip=clean_repFasta.phylip.dist)
+
+
 get.current()
