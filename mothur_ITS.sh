@@ -47,13 +47,11 @@ make.shared(list=stability.trim.contigs.good.unique.precluster.abund.pick.pick.a
 #classify each OTU, used the RDP classification 100% means all seqs in that OTU match at that classification level
 classify.otu(list=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.list, count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table, taxonomy=stability.trim.contigs.good.unique.precluster.abund.pick.UNITEv6_sh_dynamic_s.wang.pick.taxonomy)
 
-get.oturep(count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table, list=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.list, method=abundance)
-
 #check number of sequences in each sample
 count.groups(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.shared)
 
-#alpha diversity
-summary.single(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.shared, calc=nseqs-sobs-coverage-shannon-shannoneven-invsimpson, subsample=10000)
+#alpha diversity (all provided measures; samples with less than 10000 reads are eliminated)
+summary.single(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.shared, subsample=10000)
 
 #beta diversity
 dist.shared(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.shared, calc=braycurtis-jest-thetayc, subsample=10000)
@@ -63,12 +61,25 @@ sub.sample(shared=stability.trim.contigs.good.unique.precluster.abund.pick.pick.
  
 summary.tax(taxonomy=current, count=current)
 
-# Making a tree. you need rename_oturep.py
-python rename_oturep.py   stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.0.05.rep.fast
+### Make a tree of OTU representative sequences. You need rename_oturep.py ###
+# 1. Get representative sequences for each OTU
+get.oturep(list=stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.list, fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, name=stability.trim.contigs.good.names, sorted=bin, method=abundance)
 
+# 2. Rename sequence names into OTU names
+python rename_oturep.py stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.0.05.rep.fast
+
+# 3. # calculate distances between sequences in clean_repFasta.fasta
 pairwise.seqs(fasta=clean_repFasta.fasta, cutoff=0.05, output=lt)
-#build a tree for rep sequences
-clearcut(phylip=clean_repFasta.phylip.dist)
 
+# 4. Build a tree for representative sequences (i.e., final OTUs)
+clearcut(phylip=clean_repFasta.phylip.dist)
+######
 
 get.current()
+
+### Files needed for downstream analysis in R package phyloseq: ###
+# 1. OTU counts: 
+# 2. OTU taxonomy: stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.0.05.cons.taxonomy
+# 3. OTU tree: clean_repFasta.phylip.tre
+# 4. Samples metadata with alpha-diversity indexes: stability.trim.contigs.good.unique.precluster.abund.pick.pick.agc.unique_list.groups.summary
+######
