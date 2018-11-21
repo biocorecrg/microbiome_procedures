@@ -33,12 +33,12 @@ summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fast
 #RDP classifier using silva as the reference (similar results as RDP reference but some are classified to species)
 classify.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, reference=UNITEv6_sh_dynamic_s.fasta, taxonomy=UNITEv6_sh_dynamic.tax, cutoff=60, processors=44)
 
-#Remove unwanted lineages (Bacteria-unkknown-Protista)
+#Remove unwanted lineages (Bacteria-Animalia-Plantae-unclassified-Plantae_unclassified-unknown-Protista)
 remove.lineage(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, taxonomy=stability.trim.contigs.good.unique.precluster.abund.pick.UNITEv6_sh_dynamic_s.wang.taxonomy, taxon=Bacteria-Animalia-Plantae-unclassified-Plantae_unclassified-unknown-Protista)
 summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table)
 
 #cluster using vsearch, default level is cutoff=0.03, since these are ITS we'll use 5% instead
-# We cannot calculate the distance like with bacteria because the length is not the same
+# We cannot calculate the distance like with bacteria because the sequence lengths are different
 cluster(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.pick.count_table, method=agc, cutoff=0.05)
 
 #make OTU matrix 
