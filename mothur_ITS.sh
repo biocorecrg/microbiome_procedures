@@ -1,5 +1,6 @@
 # This procedure is based on mothur version 1.39.5
 # First you need to create a stability file (a text file with "ID PAIR1 PAIR2")
+# This comes from https://github.com/krmaas/bioinformatics/blob/master/mothur.fungal.batch
 #example:
 for i in *_R1_*.gz; do echo `basename $i _R1_fastq.gz` $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
 
