@@ -1,9 +1,28 @@
-# This procedure for analysis of fungi ITS amplicons is based on mothur version 1.39.5
-# Adapted with changes from https://github.com/krmaas/bioinformatics/blob/master/mothur.fungal.batch
-
-# Create a stability file (a text file with "ID PAIR1 PAIR2")
-# for a example:
-for i in *_R1_*.gz; do echo `basename $i _R1_fastq.gz` $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
+# This procedure is for the analysis of fungi ITS amplicons using mothur version 1.39.5
+#########################################################################################
+# To run this procedure:
+#
+# 1. Create a stability file (a text file with "ID PAIR1 PAIR2")
+#    using in bash, for a example:
+#      $ for i in ../data/*_R1_*.gz; do file=`basename $i`; echo ${file%-*} $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
+#
+# 2. Download the mothur release of the UNITE ITS database from https://unite.ut.ee/repository.php and
+#    place files UNITEv6_sh_dynamic_s.fasta and UNITEv6_sh_dynamic.tax in the current folder.
+#
+# 3. Make the file to run this mothur_ITS.txt on your cluster in a batch mode:
+#    for example, using SGE (modify as needed, also change the paramater "processors" in commands below if needed)
+#      #!/bin/bash
+#      #$ -cwd
+#      #$ -q [your queue]
+#      #$ -pe smp 44
+#      #$ -j y
+#      #$ -l virtual_free=450G
+#      #$ -l h_rt=100:00:00
+#      mothur mothur_ITS.txt    # can be run as a whole pipeline or step by step by commenting/uncommenting commands
+#
+# 4. Launch the pipeline:
+#      $ qsub -N mothur run_mothur.sh&
+#########################################################################################
 
 # Assemble contigs (even though some might not overlap)
 make.contigs(processors=12, file=stability.file)
@@ -17,9 +36,9 @@ unique.seqs(fasta=stability.trim.contigs.good.fasta)
 count.seqs(name=stability.trim.contigs.good.names, group=stability.contigs.good.groups)
 summary.seqs(count=stability.trim.contigs.good.count_table, fasta=stability.trim.contigs.good.unique.fasta)
 
-# Pre-cluster contigs at ~1% difference to reduce computation time (4 different nucleotides in an amplicon of 300-500nt). 
-# (this step is better to run in bach mode since it is slow)
-pre.cluster(fasta=stability.trim.contigs.good.unique.fasta, diffs=4, count=stability.trim.contigs.good.count_table)
+# Pre-cluster contigs at ~1% difference to reduce further computation time (4 different nucleotides in an amplicon of 300-500nt). 
+# (this step is advised to run in a bach mode because it is very slow)
+pre.cluster(processors=12, fasta=stability.trim.contigs.good.unique.fasta, diffs=4, count=stability.trim.contigs.good.count_table)
 summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.fasta, count=stability.trim.contigs.good.unique.precluster.count_table)
 
 # Remove clusters consisting of only one contig
@@ -27,13 +46,14 @@ split.abund(fasta=stability.trim.contigs.good.unique.precluster.fasta, count=sta
 summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.fasta, count=stability.trim.contigs.good.unique.precluster.abund.count_table) 
 
 # Remove chimeras (sequences formed from two or more biological sequences joined together)
-chimera.vsearch(fasta=stability.trim.contigs.good.unique.precluster.abund.fasta, count=stability.trim.contigs.good.unique.precluster.abund.count_table)
+chimera.vsearch(processors=12, fasta=stability.trim.contigs.good.unique.precluster.abund.fasta, count=stability.trim.contigs.good.unique.precluster.abund.count_table)
 remove.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.fasta, accnos=stability.trim.contigs.good.unique.precluster.abund.denovo.vsearch.accnos, count=stability.trim.contigs.good.unique.precluster.abund.count_table)
 summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table)
 
-# Classify contigs mapping them to the UNITE ITS database (download the mothur release of the databae from https://unite.ut.ee/repository.php)
+# Classify contigs mapping them to the UNITE ITS database (download the mothur release of the database from https://unite.ut.ee/repository.php)
 # using the manually curated dataset of ITS sequences and taxonomy (dynamic files)
-classify.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, reference=UNITEv6_sh_dynamic_s.fasta, taxonomy=UNITEv6_sh_dynamic.tax, cutoff=60, processors=44)
+# Make sure to provide the correct path to the files of the UNITE database
+classify.seqs(cutoff=60, processors=44, fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, reference=UNITEv6_sh_dynamic_s.fasta, taxonomy=UNITEv6_sh_dynamic.tax)
 
 # Remove unwanted lineages (Bacteria-Animalia-Plantae-unclassified-Plantae_unclassified-unknown-Protista)
 remove.lineage(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, taxonomy=stability.trim.contigs.good.unique.precluster.abund.pick.UNITEv6_sh_dynamic_s.wang.taxonomy, taxon=Bacteria-Animalia-Plantae-unclassified-Plantae_unclassified-unknown-Protista)
