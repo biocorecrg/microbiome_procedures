@@ -7,7 +7,7 @@
 #      $ for i in ../data/*_R1_*.gz; do file=`basename $i`; echo ${file%-*} $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
 #
 # 2. Download the mothur release of the UNITE ITS database from https://unite.ut.ee/repository.php and
-#    place files UNITEv6_sh_dynamic_s.fasta and UNITEv6_sh_dynamic.tax in the current folder.
+#    place files UNITEv6_sh_dynamic_s.fasta and UNITEv6_sh_dynamic_s.tax in the current folder.
 #
 # 3. Make the file to run this mothur_ITS.txt on your cluster in a batch mode:
 #    for example, using SGE (modify as needed, also change the paramater "processors" in commands below if needed)
@@ -53,7 +53,7 @@ summary.seqs(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fast
 # Classify contigs mapping them to the UNITE ITS database (download the mothur release of the database from https://unite.ut.ee/repository.php)
 # using the manually curated dataset of ITS sequences and taxonomy (dynamic files)
 # Make sure to provide the correct path to the files of the UNITE database
-classify.seqs(cutoff=60, processors=44, fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, reference=UNITEv6_sh_dynamic_s.fasta, taxonomy=UNITEv6_sh_dynamic.tax)
+classify.seqs(cutoff=60, processors=44, fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, reference=UNITEv6_sh_dynamic_s.fasta, taxonomy=UNITEv6_sh_dynamic_s.tax)
 
 # Remove unwanted lineages (Bacteria-Animalia-Plantae-unclassified-Plantae_unclassified-unknown-Protista)
 remove.lineage(fasta=stability.trim.contigs.good.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.precluster.abund.pick.count_table, taxonomy=stability.trim.contigs.good.unique.precluster.abund.pick.UNITEv6_sh_dynamic_s.wang.taxonomy, taxon=Bacteria-Animalia-Plantae-unclassified-Plantae_unclassified-unknown-Protista)
