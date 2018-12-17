@@ -3,7 +3,7 @@
 #
 # Tested on mothur version 1.39.5
 # Run time on 44 CPUs for three mock samples (*V3V4*) in /data (~450K initial reads) was ~20 min,
-# for ~5.5M reads, ~6 hrs.
+# for ~5.5M reads, ~6 hrs; for 20.7M reads, ~13 hrs.
 #
 #########################################################################################
 # 
@@ -14,7 +14,10 @@
 #      $ for i in ../data/*_R1_*.gz; do file=`basename $i`; echo ${file%-*} $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
 #    or
 #      $ for i in ../data/*_R1_*.gz; do file=`basename $i`; echo ${file:0:5} $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
-#    and remove from this file unwanted samples (e.g., those that didn't pass QC).
+#    or, for files like this 30427-90_S46_L001_R1_001.fastq.gz 
+#	 or 30745-LAL-0025-A_S29_L001_R1_001.fastq.gz, with the same first 6 characters
+#      $ for i in ../../data/*_R1_*.gz; do file=`basename $i`; file=${file:6}; file=${file%S*}; file=`echo $file | sed s/[_-]//g`; echo $file  $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
+#	 and remove from this file unwanted samples (e.g., those that didn't pass QC).
 #
 #	 Make sure to keep sample names as short as possible (2-4 characters) and remove from them 
 #      any non-letter characters, otherwise it will be impossible to filter them out inside mothur.
@@ -40,7 +43,13 @@
 #
 # 4. Put rename_oturep.py in the current folder or modify the run_mothur.sh to provide the path.
 #
-# 5. Make two files: batch.txt that contains everything in this file and batch_tre.txt that contains the last two commands to generate the OTU tree.
+# 5. Make two files: batch.txt that contains the first two mothur commands in this file
+#		make.contigs(processors=44, file=stability.file)
+#		summary.seqs(fasta=stability.trim.contigs.fasta)
+#
+#    and batch_tre.txt that contains the last two commands to generate the OTU tree:
+# 		pairwise.seqs(processors=44, fasta=clean_repFasta.fasta, cutoff=0.05, output=lt)
+# 		clearcut(phylip=clean_repFasta.phylip.dist)
 #
 # 6. Make the file run_mothur.sh to run mothur in a batch mode on your cluster,
 #    for example, using SGE (modify as needed, also change the paramater "processors" in commands below if needed)
@@ -52,27 +61,33 @@
 #      #$ -l virtual_free=450G
 #      #$ -l h_rt=100:00:00
 #	mothur batch.txt
-#	python rename_oturep.py stability.trim.contigs.good.unique.pick.pick.agc.unique_list.0.05.rep.fasta
-#	mothur batch_tre.txt
+#	#python rename_oturep.py stability.trim.contigs.good.unique.pick.pick.agc.unique_list.0.05.rep.fasta
+#	#mothur batch_tre.txt
 #
 # 7. Launch the pipeline:
 #      $ qsub -N mothur run_mothur.sh&
 #
+# 8. Evaluate the number of assembled contigs and remove manually samples with low number of contigs
+#       $mothur > remove.groups(group=stability.contigs.groups, groups=A-B-C-45-66A)
+#
+# 9. Replace content of batch.txt with this file.
+#    Uncomment two running lines in run_mothur.sh.
+#    Launch the pipeline again.
+#
+#########################################################################################
 #
 #   Estimation of the sequencing error rate and sequencing depth can be performed on MOCK samples 
 #   after running the pipeline. The procedure is described in the end of this file.
 #	
 #########################################################################################
 
-# Check the SILVA alignment 
-summary.seqs(fasta=silva.nr_v132.pcr.good.align, inputdir=/db/silva/mothur/silva_v132/silva_CRG_V3_V4_primers/, outputdir=.)
-
-
 # Assemble contigs (even though some might not overlap)
-make.contigs(processors=44, file=stability.file)
-summary.seqs(fasta=stability.trim.contigs.fasta)
+#make.contigs(processors=44, file=stability.file)
+#summary.seqs(fasta=stability.trim.contigs.fasta)
 # Output File Names:
 # stability.trim.contigs.summary
+
+########### renew batch.txt with the text below #########
 
 # Remove contigs with ambiguous bases and longer than 500bp
 screen.seqs(fasta=stability.trim.contigs.fasta, group=stability.contigs.groups, maxambig=0, maxlength=500)
@@ -91,15 +106,18 @@ count.seqs(name=stability.trim.contigs.good.names, group=stability.contigs.good.
 # Output File Names:
 # stability.trim.contigs.good.count_table
 
+# Check the SILVA alignment 
+summary.seqs(fasta=silva.nr_v132.pcr.good.align, inputdir=/db/silva/mothur/silva_v132/silva_CRG_V3_V4_primers/, outputdir=.)
+
 # Align contigs to the reference alignment
-#align.seqs(processors=44, fasta=stability.trim.contigs.good.unique.fasta, reference=/db/silva/mothur/silva_v132/silva_CRG_V3_V4_primers/silva.nr_v132.pcr.good.align, flip=t)
-align.seqs(processors=44, fasta=stability.trim.contigs.good.unique.fasta, reference=silva.nr_v132.pcr.good.align, flip=t)
+align.seqs(processors=44, fasta=stability.trim.contigs.good.unique.fasta, reference=/db/silva/mothur/silva_v132/silva_CRG_V3_V4_primers/silva.nr_v132.pcr.good.align, flip=t)
+#align.seqs(processors=44, fasta=stability.trim.contigs.good.unique.fasta, reference=silva.nr_v132.pcr.good.align, flip=t)
 # Output File Names:
 # stability.trim.contigs.good.unique.align
 # stability.trim.contigs.good.unique.align.report
 # stability.trim.contigs.good.unique.flip.accnos
 
-# this step cannot be skipped because output *summary file is used in the next step
+# this step cannot be skipped because the output *summary file is used in the next step
 summary.seqs(fasta=stability.trim.contigs.good.unique.align, count=stability.trim.contigs.good.count_table)
 
 # Clean the alignment (change the start and the end) and remove alignments with more than 8 homopolymers (the maximum number found in the reference alignment)
@@ -112,8 +130,7 @@ unique.seqs(fasta=stability.trim.contigs.good.unique.good.filter.fasta, count=st
 
 # Pre-cluster sequences allowing for up to 4 (in mothur SOP, 2 are used) differences between sequences. 
 # This command will split the sequences by groups and then sort them by abundance and 
-# go from most abundant to least and identify sequences that are within 4nt from each other.
-# If they are, then they get merged. 
+# go from the most to least abundant, identify sequences that are within 4nt from each other, and merge them.
 pre.cluster(processors=44, fasta=stability.trim.contigs.good.unique.good.filter.unique.fasta, count=stability.trim.contigs.good.unique.good.filter.count_table, diffs=4)
 summary.seqs(fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.count_table)
 
@@ -190,7 +207,8 @@ classify.otu(label=1, list=stability.trim.contigs.good.unique.good.filter.unique
 count.groups(shared=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.phylip.opti_mcc.shared)
 
 # Calculate alpha diversity (all provided measures; subsampling will be done by the number of reads in the smallest file; 
-# alternatively, use the parameter subsample=10000, then the samples with smaller amount of reads will be eliminated)
+# alternatively, use the parameter subsample=10000, then the samples with smaller amount of reads will be eliminated;
+# in this case, make sure to remove.groups to make all files that will be used by PhyloSeq to correspond)
 summary.single(label=0.03, subsample=T, shared=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.phylip.opti_mcc.shared)
 
 # Output File Names:
@@ -218,6 +236,14 @@ get.oturep(sorted=bin, label=1, method=abundance, list=stability.trim.contigs.go
 
 # 4. Build a tree for representative sequences (i.e., final OTUs)
 # clearcut(phylip=clean_repFasta.phylip.dist)
+
+#######################################################################
+
+# File to see read counts by taxa levels and samples is
+# stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.tax.summary
+
+# for a specific sample and taxa level it can be explored, e.g., using the command
+#$ cut -f1-3,99 stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.tax.summary | awk '{if ( ($1 == 2 && $4!=0) || ($1 == 3 && $4!=0 ) || ($1 == 4 && $4!=0) || ($1 == 5 && $4 !=0) || ($1==6 && $4!=0) ) print $0;}'
 
 #######################################################################
 
