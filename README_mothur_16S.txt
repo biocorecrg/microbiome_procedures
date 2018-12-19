@@ -2,8 +2,11 @@
 # following the protocol at https://www.mothur.org/wiki/MiSeq_SOP
 #
 # Tested on mothur version 1.39.5
-# Run time on 44 CPUs for three mock samples (*V3V4*) in /data (~450K initial reads) was ~20 min,
-# for ~5.5M reads, ~6 hrs; for 20.7M reads, ~13 hrs.
+# Run time on 44 CPUs for three mock samples (*V3V4*) in /data (~450K initial reads) was ~20 min.
+#
+# For runs with real samples, time depends on reachness of samples. 
+# Thus a run of ~5.5M reads (44 samples) took ~6 hrs; of 20.7M reads (96 samples), ~13 hrs; 
+# and yet another run of ~19.8M reads(96 samples) took ~7 hrs.
 #
 #########################################################################################
 # 
