@@ -232,7 +232,7 @@ get.oturep(sorted=bin, label=1, method=abundance, list=stability.trim.contigs.go
 # 2. Rename sequence names into OTU names (needs Python script in this repository)
 # python rename_oturep.py stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.pick.tx.1.rep.fasta
 
-# Place the code below in another batch_tre.txt and run via queue
+# Place the code below (uncomment pairwise.seqs and clearcut) in batch_tre.txt to run via queue
 
 # 3. # calculate distances between sequences in clean_repFasta.fasta
 # pairwise.seqs(processors=44, fasta=clean_repFasta.fasta, cutoff=0.05, output=lt)
