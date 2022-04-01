@@ -12,7 +12,7 @@
 # 
 #	To run this procedure:
 #
-# 1. Create a stability file (a text file with "ID PAIR1 PAIR2")
+# 1. Create a stability file (a text file with "ID PAIR1 PAIR2", separated by space)
 #    using in bash, for a example:
 #      $ for i in ../data/*_R1_*.gz; do file=`basename $i`; echo ${file%-*} $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
 #    or
@@ -24,6 +24,13 @@
 #
 #	 Make sure to keep sample names as short as possible (2-4 characters) and remove from them 
 #      any non-letter characters, otherwise it will be impossible to filter them out inside mothur.
+#
+# An example of stability.file
+# A1 ../data/A1-V3V4_S3_L001_R1_001.fastq.gz ../data/A1-V3V4_S3_L001_R2_001.fastq.gz
+# A2 ../data/A2-V3V4_S11_L001_R1_001.fastq.gz ../data/A2-V3V4_S11_L001_R2_001.fastq.gz
+# A3 ../data/A3-V3V4_S19_L001_R1_001.fastq.gz ../data/A3-V3V4_S19_L001_R2_001.fastq.gz
+# B1 ../data/B1-V3V4_S27_L001_R1_001.fastq.gz ../data/B1-V3V4_S27_L001_R2_001.fastq.gz
+# B2 ../data/B2-V3V4_S35_L001_R1_001.fastq.gz ../data/B2-V3V4_S35_L001_R2_001.fastq.gz
 #
 # 2. If you already worked with the same 16S primers before, 
 #	 provide the correct path (inputdir) to the directory where these two files are
