@@ -34,6 +34,10 @@
 #    
 #	Otherwise, make a reference database for the alignment (this takes a while to match primers).
 #   You will need files silva.nr_v132.align and pcrTest.oligos
+#   pcrTest.oligos for V3-V4 primers looks like that:
+# forward CCTACGGGNGGCWGCAG
+# reverse GACTACHVGGGTATCTAATCC
+#
 #		mothur > pcr.seqs(fasta=silva.nr_v132.align, oligos=./pcrTest.oligos, keepdots=F, processors=44)
 #	    mothur > summary.seqs(fasta=silva.nr_v132.pcr.align) 	 
 #		mothur > screen.seqs(fasta=silva.nr_v132.pcr.align, start=4965, end=21977)
