@@ -112,7 +112,9 @@
 
 ########### renew batch.txt with the text below #########
 
-# Remove contigs with ambiguous bases and longer than 500bp
+# Remove contigs with ambiguous bases and longer than maxlength (in bp)
+
+
 screen.seqs(fasta=stability.trim.contigs.fasta, group=stability.contigs.groups, maxambig=0, maxlength=500)
 summary.seqs(fasta=stability.trim.contigs.good.fasta)
 
