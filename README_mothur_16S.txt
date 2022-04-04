@@ -81,10 +81,19 @@
 # 7. Launch the pipeline:
 #      $ qsub -N mothur run_mothur.sh&
 #
-# 8. Evaluate the number of assembled contigs and remove manually samples with low number of contigs
+# 8. Look in the log file at the output of the first two commands
+#		    make.contigs(processors=44, file=stability.file)
+#		    summary.seqs(fasta=stability.trim.contigs.fasta)
+#   to decide on the parameters in the command
+#     screen.seqs(fasta=stability.trim.contigs.fasta, group=stability.contigs.groups, maxambig=0, maxlength=500)
+#
+# 9. Comment the first two lines and run mothur.sh with batch.txt
+#
+#
+# 10. Evaluate the number of assembled contigs and remove manually samples with low number of contigs
 #       $mothur > remove.groups(group=stability.contigs.groups, groups=A-B-C-45-66A)
 #
-# 9. Replace content of batch.txt with this file.
+# 11. Replace content of batch.txt with this file.
 #    Uncomment two running lines in run_mothur.sh.
 #    Launch the pipeline again.
 #
