@@ -1,7 +1,14 @@
 # This procedure is for the analysis of 16S rRNA amplicons sequenced on MiSeq
 # following the protocol at https://www.mothur.org/wiki/MiSeq_SOP
 #
-# Tested on mothur version 1.39.5
+# Last time tested using mothur v.1.44.1 
+# running it from the Singularity image mothur_1.44.1--h59c8b9c_1.sif
+# made with the command from docker pull quay.io/biocontainers/mothur:<tag>
+#   singularity build mothur_1.44.1--h59c8b9c_1.sif docker://biocontainers/mothur:1.44.1--h59c8b9c_1
+#
+# using the latest RDP reference trainset (see below the link) and SILVA v.132
+######################
+# For the initial commit, it was tested on mothur version 1.39.5
 # Run time on 44 CPUs for three mock samples (*V3V4*) in /data (~450K initial reads) was ~20 min.
 #
 # For runs with real samples, time depends on reachness of samples. 
@@ -32,7 +39,7 @@
 # B1 ../data/B1-V3V4_S27_L001_R1_001.fastq.gz ../data/B1-V3V4_S27_L001_R2_001.fastq.gz
 # B2 ../data/B2-V3V4_S35_L001_R1_001.fastq.gz ../data/B2-V3V4_S35_L001_R2_001.fastq.gz
 #
-# 2. If you already worked with the same 16S primers before, 
+# 2. If you already worked with the same 16S primers and same SILVA version before, 
 #	 provide the correct path (inputdir) to the directory where these two files are
 #	 in the command align.seqs() below
 #	 or copy these files in the current directory: 
@@ -51,15 +58,16 @@
 #		mothur > summary.seqs(fasta=silva.nr_v132.pcr.good.align)
 #		
 # 3. Download the latest reference from https://mothur.org/wiki/RDP_reference_files
-#		wget https://mothur.org/w/images/d/dc/Trainset16_022016.rdp.tgz
-#		tar -xvzf Trainset16_022016.rdp.tgz -C Trainset/.
+#		wget https://mothur.s3.us-east-2.amazonaws.com/wiki/trainset18_062020.pds.tgz
+#		tar -xvzf trainset18_062020.pds.tgz 
 #	 Make sure to provide correct path and versions in the command classify.seqs() below.
 #
 # 4. Put rename_oturep.py in the current folder or modify the run_mothur.sh to provide the path.
 #
-# 5. Make two files: batch.txt that contains the first two mothur commands in this file
-#		make.contigs(processors=44, file=stability.file)
-#		summary.seqs(fasta=stability.trim.contigs.fasta)
+# 5. Make the following 4 files (as specified below: 
+#     (1) batch_start.txt that contains the mothur commands until the command screen.seqs() after contig assembly
+#		  (2) batch_align.txt 
+
 #
 #    and batch_tre.txt that contains the last two commands to generate the OTU tree:
 # 		pairwise.seqs(processors=44, fasta=clean_repFasta.fasta, cutoff=0.05, output=lt)
@@ -74,7 +82,7 @@
 #      #$ -j y
 #      #$ -l virtual_free=450G
 #      #$ -l h_rt=100:00:00
-#	mothur batch.txt
+#	 mothur batch_start.txt
 #	#python rename_oturep.py stability.trim.contigs.good.unique.pick.pick.agc.unique_list.0.05.rep.fasta
 #	#mothur batch_tre.txt
 #
@@ -103,19 +111,23 @@
 #   after running the pipeline. The procedure is described in the end of this file.
 #	
 #########################################################################################
+########### This is batch_start.txt #########
+
+# Check the SILVA alignment 
+summary.seqs(fasta=silva.nr_v132.pcr.good.align, inputdir=/db/silva/mothur/silva_v132/silva_CRG_V3_V4_primers/, outputdir=.)
 
 # Assemble contigs (even though some might not overlap)
-#make.contigs(processors=44, file=stability.file)
-#summary.seqs(fasta=stability.trim.contigs.fasta)
+make.contigs(processors=44, file=stability.file)
+summary.seqs(fasta=stability.trim.contigs.fasta)
 # Output File Names:
 # stability.trim.contigs.summary
 
-########### renew batch.txt with the text below #########
+########### this is batch_align.txt  #########
 
-# Remove contigs with ambiguous bases and longer than maxlength (in bp)
+# Decide on the parameters in screen.seqs() looking at the summary.seqs() output for assembled contigs in the end of log files 
+# Remove contigs with ambiguous bases and longer than maxlength (in bp) and with maxhomop
 
-
-screen.seqs(fasta=stability.trim.contigs.fasta, group=stability.contigs.groups, maxambig=0, maxlength=500)
+screen.seqs(fasta=stability.trim.contigs.fasta, group=stability.contigs.groups, maxambig=0, maxlength=500, maxhomop=7)
 summary.seqs(fasta=stability.trim.contigs.good.fasta)
 
 # Leave unique contigs only by removing duplicates (to speed up the further mapping)
@@ -131,9 +143,6 @@ count.seqs(name=stability.trim.contigs.good.names, group=stability.contigs.good.
 # Output File Names:
 # stability.trim.contigs.good.count_table
 
-# Check the SILVA alignment 
-summary.seqs(fasta=silva.nr_v132.pcr.good.align, inputdir=/db/silva/mothur/silva_v132/silva_CRG_V3_V4_primers/, outputdir=.)
-
 # Align contigs to the reference alignment
 align.seqs(processors=44, fasta=stability.trim.contigs.good.unique.fasta, reference=/db/silva/mothur/silva_v132/silva_CRG_V3_V4_primers/silva.nr_v132.pcr.good.align, flip=t)
 #align.seqs(processors=44, fasta=stability.trim.contigs.good.unique.fasta, reference=silva.nr_v132.pcr.good.align, flip=t)
@@ -145,11 +154,16 @@ align.seqs(processors=44, fasta=stability.trim.contigs.good.unique.fasta, refere
 # this step cannot be skipped because the output *summary file is used in the next step
 summary.seqs(fasta=stability.trim.contigs.good.unique.align, count=stability.trim.contigs.good.count_table)
 
-# Clean the alignment (change the start and the end) and remove alignments with more than 8 homopolymers (the maximum number found in the reference alignment)
-screen.seqs(processors=44, fasta=stability.trim.contigs.good.unique.align, count=stability.trim.contigs.good.count_table, summary=stability.trim.contigs.good.unique.summary, start=4965, end=21977, maxhomop=8)
+########### this is batch_classify.txt  (including get.oturep() to make the tree) #########
+
+# Clean the alignment: (change the start and the end) and remove alignments with more than 8 homopolymers 
+# (the maximum number found in the reference alignment) and minlength - 
+# to choose these parameters, see the summary.seqs() output for alignment in the end of log files
+
+screen.seqs(processors=44, fasta=stability.trim.contigs.good.unique.align, count=stability.trim.contigs.good.count_table, summary=stability.trim.contigs.good.unique.summary, start=4965, end=21977, maxhomop=8, minlength=405)
 summary.seqs(fasta=stability.trim.contigs.good.unique.good.align, count=stability.trim.contigs.good.good.count_table)
 
-# Filter the alignment to remove the overhangs at both ends and remove dots in the alginment to make it shorter
+# Filter the alignment to remove the overhangs at both ends and remove dots (gaps) in the alginment 
 filter.seqs(processors=44, fasta=stability.trim.contigs.good.unique.good.align, vertical=T, trump=.)
 unique.seqs(fasta=stability.trim.contigs.good.unique.good.filter.fasta, count=stability.trim.contigs.good.good.count_table)
 
@@ -178,8 +192,8 @@ chimera.vsearch(processors=44, fasta=stability.trim.contigs.good.unique.good.fil
 remove.seqs(fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.fasta, accnos=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.accnos)
 summary.seqs(fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table)
 
-# Classify sequences
-classify.seqs(cutoff=80, processors=44, fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table, reference=./Trainset/trainset16_022016.pds/trainset16_022016.pds.fasta, taxonomy=./Trainset/trainset16_022016.pds/trainset16_022016.pds.tax)
+# Classify sequences using RDP trainset to remove non bacteria taxa
+classify.seqs(cutoff=80, processors=44, fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table, reference=./trainset18_062020.pds/trainset18_062020.pds.fasta, taxonomy=./trainset18_062020.pds/trainset18_062020.pds.tax)
 # Output File Names:
 # stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.taxonomy
 # stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.tax.summary
@@ -187,6 +201,14 @@ classify.seqs(cutoff=80, processors=44, fasta=stability.trim.contigs.good.unique
 
 remove.lineage(fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table, taxonomy=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.taxonomy, taxon=Chloroplast-Mitochondria-unknown-Archaea-Eukaryota)
 summary.tax(taxonomy=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.taxonomy, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table)
+
+###### this is batch_otu.txt #######
+#
+## NOTE: if the log file from running the batch_classify.txt says *** No contaminants to remove ***
+# files *pick.pick.* won't be generated; therefore, to proceed with the code below, you need to copy a few files:
+# cp stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.fasta
+# cp stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.pick.count_table
+
 
 # Calculate pairwise distances among unique sequences 
 dist.seqs(processors=44, output=lt, fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.fasta, cutoff=0.03)
