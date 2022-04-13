@@ -16,6 +16,10 @@
 # and yet another run of ~19.8M reads(96 samples) took ~7 hrs.
 #
 #########################################################################################
+# Run everything on control positive samples first (MOCK), preferably step-by-step to adjust filtering parameters for contigs and alignments
+# and to estimate the error.
+# Then run everything at once on all samples.
+#########################################################################################
 # 
 #	To run this procedure:
 #
