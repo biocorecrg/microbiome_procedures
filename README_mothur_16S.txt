@@ -174,11 +174,11 @@ unique.seqs(fasta=stability.trim.contigs.good.unique.good.filter.fasta, count=st
 # Pre-cluster sequences allowing for up to 4 (in mothur SOP, 2 are used) differences between sequences. 
 # This command will split the sequences by groups and then sort them by abundance and 
 # go from the most to least abundant, identify sequences that are within 4nt from each other, and merge them.
-pre.cluster(processors=44, fasta=stability.trim.contigs.good.unique.good.filter.unique.fasta, count=stability.trim.contigs.good.unique.good.filter.count_table, diffs=4)
+pre.cluster(processors=44, diffs=2, fasta=stability.trim.contigs.good.unique.good.filter.unique.fasta, count=stability.trim.contigs.good.unique.good.filter.count_table)
 summary.seqs(fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.count_table)
 
 # Remove clusters with one read (not in mothur SOP, so be careful further on with file names!)
-split.abund(fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.count_table, cutoff=1, accnos=true)
+split.abund(cutoff=1, accnos=true, fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.count_table)
 
 # Remove chimeras. 
 # Chimeras are sequences formed from two or more biological sequences joined together. 
@@ -203,15 +203,15 @@ classify.seqs(cutoff=80, processors=44, fasta=stability.trim.contigs.good.unique
 # stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.tax.summary
 # The summary file contains read counts by taxa levels and samples
 
-remove.lineage(fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table, taxonomy=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.taxonomy, taxon=Chloroplast-Mitochondria-unknown-Archaea-Eukaryota)
+remove.lineage(taxon=Chloroplast-Mitochondria-unknown-Archaea-Eukaryota, fasta=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table, taxonomy=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.taxonomy)
 summary.tax(taxonomy=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.taxonomy, count=stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table)
 
 ###### this is batch_otu.txt #######
 #
 ## NOTE: if the log file from running the batch_classify.txt says *** No contaminants to remove ***
 # files *pick.pick.* won't be generated; therefore, to proceed with the code below, you need to copy a few files:
-# cp stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.fasta
-# cp stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.pick.count_table
+cp -R -u -p stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.fasta stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.fasta
+cp -R -u -p stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.count_table stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.denovo.vsearch.pick.pick.count_table
 
 
 # Calculate pairwise distances among unique sequences 
