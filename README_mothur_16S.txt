@@ -16,11 +16,41 @@
 # and yet another run of ~19.8M reads(96 samples) took ~7 hrs.
 #
 #########################################################################################
-# Run everything on control positive samples first (MOCK), preferably step-by-step to adjust filtering parameters for contigs and alignments
+# Run first everything on control negative and positive samples (MOCK), preferably step-by-step to adjust filtering parameters for contigs and alignments
 # and to estimate the error.
-# Then run everything at once on all samples.
+# Then run everything at once on all samples (exluding negative control and MOCK, using the same parameters.
 #########################################################################################
 # 
+# Before running mothur do fastqc for all fastq files. 
+# Trim the adapter if needed. For example, reads might contain the nextera transposase adapter. 
+# To trim it, make the file NexteraPE-PE.fa 
+#
+# >PrefixNX/1
+# AGATGTGTATAAGAGACAG
+# >PrefixNX/2
+# AGATGTGTATAAGAGACAG
+# >Trans1
+# TCGTCGGCAGCGTCAGATGTGTATAAGAGACAG
+# >Trans1_rc
+# CTGTCTCTTATACACATCTGACGCTGCCGACGA
+# >Trans2
+# GTCTCGTGGGCTCGGAGATGTGTATAAGAGACAG
+# >Trans2_rc
+# CTGTCTCTTATACACATCTCCGAGCCCACGAGAC
+#
+# and run skewer 
+# for i in *_R1_*.fastq.gz; do qsub -N skewer skewer.sh $i ${i/_R1_/_R2_}; done
+# skewer.sh
+#     #!/bin/bash
+#     $ -cwd
+#     $ -q ...
+#     skewer -t 8 -x NexteraPE-PE.fa $1 $2 
+# Trimmed files need to be moved to a new directory and renamed (for fastqc to be able to run on them)
+#   for i in *pair1*; do mv $i ${i/"_R1_001.fastq-trimmed-pair1.fastq"/"_R1_001.fastq"}; done
+#   for i in *pair2*; do mv $i ${i/"_R1_001.fastq-trimmed-pair2.fastq"/"_R2_001.fastq"}; done
+#
+# Note: Mothur doesn't recommend to trim reads for quality before assembling contigs.
+#########################################################################################
 #	To run this procedure:
 #
 # 1. Create a stability file (a text file with "ID PAIR1 PAIR2", separated by space)
@@ -31,7 +61,8 @@
 #    or, for files like this 30427-90_S46_L001_R1_001.fastq.gz 
 #	 or 30745-LAL-0025-A_S29_L001_R1_001.fastq.gz, with the same first 6 characters
 #      $ for i in ../../data/*_R1_*.gz; do file=`basename $i`; file=${file:6}; file=${file%S*}; file=`echo $file | sed s/[_-]//g`; echo $file  $i `echo $i | sed s/_R1_/_R2_/g`; done >> stability.file
-#	 and remove from this file unwanted samples (e.g., those that didn't pass QC).
+#
+#	 and remove from stability.file unwanted samples (e.g., those that didn't pass QC).
 #
 #	 Make sure to keep sample names as short as possible (2-4 characters) and remove from them 
 #      any non-letter characters, otherwise it will be impossible to filter them out inside mothur.
