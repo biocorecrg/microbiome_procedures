@@ -300,7 +300,7 @@ get.oturep(sorted=bin, label=1, method=abundance, list=stability.trim.contigs.go
 
 # Files to pass to phyloseq for downstream analysis:
 
-# metadata --> stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.phylip.opti_mcc.groups.summary
+# metadata --> stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pick.phylip.opti_mcc.groups.ave-std.summary
 # OTU_taxonomy --> stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.pick.tx.1.cons.taxonomy
 # OTU_counts --> stability.trim.contigs.good.unique.good.filter.unique.precluster.abund.pick.pds.wang.pick.tx.shared
 # OTU_tree --> clean_repFasta.phylip.tre
